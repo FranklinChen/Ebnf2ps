@@ -1,0 +1,365 @@
+\documentclass[a4paper]{article}
+\usepackage{a4}
+\usepackage{iso8859-1}
+\usepackage{epsfig}
+
+\newenvironment{bfscript}[1]{%
+  \begin{list}{}{\settowidth{\labelwidth}{\bf #1}
+      \setlength{\leftmargin}{\labelwidth} 
+      \addtolength{\leftmargin}{\labelsep}
+      \parsep0.5ex plus0.2ex minus0.2ex \itemsep 0.3ex 
+      \renewcommand{\makelabel}[1]{\bf ##1\hfill}}}
+  {\end{list}}
+\newcommand{\new}{%
+        {\ooalign {\hfil \raise .09ex
+         \hbox {n}\hfil \crcr\mathhexbox 20D}}}
+
+\begin{document}
+\title{Ebnf2ps --- Automatic Railroad Diagram Drawing\\
+       Version 1.01}
+\author{
+  Peter Thiemann, Michael Walter\\
+  Wilhelm-Schickard-Institut, Universität Tübingen\\
+  Sand 13, 72076 Tübingen\\
+  E-mail: \texttt{\{thiemann,walterm\}@informatik.uni-tuebingen.de} \\
+  \copyright 1996, Peter Thiemann}
+\maketitle
+
+Ebnf2ps  was written to fill an urgent need of the author: to produce lots of
+syntax diagrams (railroad diagrams) from a grammar in EBNF notation in short
+time. Over the time the program has acquired a couple of features in order to
+fulfill a variety of requirements. The current version produces highly readable
+railroad diagrams from grammars in various formats: Yacc, Happy and
+EBNF. \\
+The program may be freely used and distributed, you are however required not to
+remove the copyright notices from the source files. Please send any comments,
+bugs, etc.\ to the author(s).
+
+
+
+\section{How to build it}
+
+Ebnf2ps was written in Haskell, a non--strict, purely functional 
+programming language. To build Ebnf2ps you need a Haskell Compiler, 
+for example the Glasgow Haskell Compilation System
+\texttt{ghc}\footnote{GHC home page URL
+  \texttt{http://www.dcs.glasgow.ac.uk/fp/software/ghc.html}.} or the
+Haskell Compiler \texttt{hbc} by Lennart Augustsson.
+
+\begin{enumerate}
+\item  Edit the Makefile to reflect your Haskell compiler, for example
+\begin{verbatim}
+               HC= ghc
+\end{verbatim}
+\item Find out where your \TeX\ installation stores \texttt{.afm}-files (Adobe 
+  font metric files). Then you can change the variable \texttt{AFMPATH} in the 
+  Makefile or you can set the environment variable \texttt{AFMPATH} when running 
+  the program. The \texttt{.afm}-files are absolutely necessary. If you don't 
+  find them complain to your system administrator or get them yourself
+  from \\ 
+  \texttt{ftp://ftp.adobe.com/pub/adobe/AFMFiles/}.
+\item 
+  Change the variable \texttt{RGBPATH} to contain the directory where
+  your X installation stores its color data base (usually
+  \texttt{/usr/lib/X11/rgb.txt}). This can also be corrected later with the
+  environment variable \texttt{RGBPATH}. There are fallback color definitions 
+  for the 8 \emph{digital} colors (black, white, blue, green, cyan, red, magenta, 
+  yellow), so nothing needs be done if that's enough for you.
+\item 
+  Typing \texttt{make} should produce an executable file named Ebnf2ps.
+\end{enumerate}
+
+
+
+\section{How to use it}
+
+The syntax is
+\begin{verbatim}
+Ebnf2ps [options] Grammarfile Nonterminal ... [-- Nonterminal ...]
+\end{verbatim}
+where the \texttt{options} are described in Sec.~\ref{sec:options}, the syntax
+of the input file \texttt{Grammarfile} in Sec.~\ref{sec:syntax}, and
+\texttt{Nonterminal} describes the nonterminals, for which diagrams are to be
+generated, as regular expressions (see Sec.~\ref{sec:regular}). The nonterminals
+after the symbol \verb|--| are used only with the option \texttt{+unfold} (see 
+Sec.~\ref{sec:options} and \ref{sec:unfold}).  
+
+
+\subsection{Options}
+\label{sec:options}
+
+The following list shows all \textbf{options} with their \emph{parameters} and 
+their (default values). All distances and sizes measured in 1/100 point (1 point 
+is about 1/72 inch). Changes with respect to the last version of Ebnf2ps:
+some \new{}ew features, extension of grammar transformations and bug fixes.
+
+\begin{bfscript}{\qquad}
+\item[-titleFont     \emph{font}] (Times-Roman) PostScript font used for titles 
+  of diagrams, any font goes here that your printer knows and for which you have 
+  fetched the AFM files. Figure \ref{fig:AFMfonts} shows a sample list of font
+  names. \new
+\item[-titleScale     \emph{int}] (10) Pointsize of typeface for titles of diagrams.\new
+\item[-titleColor   \emph{color}] (black) Color of typeface for titles of diagrams. \new
+\item[-ntFont        \emph{font}] (Times-Roman) PostScript font used for nonterminals.
+\item[-ntScale        \emph{int}] (10) Pointsize of typeface for nonterminals. 
+\item[-ntColor      \emph{color}] (black) Color of typeface for nonterminals.
+\item[-ntBg         \emph{color}] (white) Background color of typeface for nonterminals.\new
+\item[-ntBoxColor   \emph{color}] (black) Color used for outlines of boxes (nonterminals).\new
+\item[-tFont         \emph{font}] (Times-Roman) PostScript font used for terminal strings. 
+\item[-tScale         \emph{int}] (10) Pointsize of typeface for terminals.
+\item[-tColor       \emph{color}] (black) Color of typeface for terminals.
+\item[-tBg          \emph{color}] (white) Background color of typeface for terminals.\new
+\item[-tBoxColor    \emph{color}] (black) Color used for outlines of boxes (terminals).\new
+\item[-borderDistX    \emph{int}] (500) Horizontal distance of objects from their container.
+\item[-borderDistY    \emph{int}] (500) Vertical distance of objects from their container. 
+\item[-lineWidth      \emph{int}] (30) Width of lines used for connecting lines.
+\item[-fatLineWidth   \emph{int}] (100) Width of lines used for drawing boxes.
+\item[-lineColor    \emph{color}] (black) Color used for connecting lines.
+\item[-arrowSize      \emph{int}] (200) Size of (invisible) box containing an arrow.
+\item[-rgbFileName    \emph{filename}] (rgb.txt) File name for color definitions.
+\item[-happy] Accept happy format input files. Happy, written by Andy Gill and Simon Marlow,
+  is a parser generator system (LALR(1)) for Haskell, similar to the tool yacc for C\footnote{The
+  program Happy is available by FTP from \texttt{ftp.dcs.glasgow.ac.uk} in \texttt{pub/haskell/happy}}.
+\item[-yacc] Accept yacc/bison format input files.\new
+\item[+ps] Produce encapsulated PostScript output (default).
+\item[+fig] Produce fig output (FORMAT 3.1).
+\item[+ebnf] Produce grammar in EBNF notation (file extension ".BNF") for yacc or happy 
+  input format files.\new
+\item[+simplify] Simplify productions (experimental, default: don't). 
+\item[+unfold] Replace nonterminals in productions (experimental, default: don't). 
+  See Sec.~\ref{sec:unfold}.\new
+\item[-verbose] Prints some progress messages.
+\item[-help] Prints a brief description of the command line, the options with their defaults,
+   and the environment variables.
+\end{bfscript}
+
+\begin{figure}
+  \begin{center}        
+    \begin{tabular}{|l|l|l|} \hline
+        AGaramond-Bold & AGaramond-BoldItalic \\
+        AGaramond-Italic & AGaramond-Regular  \\
+        AGaramond-Semibold & AGaramond-SemiboldItalic \\
+        AGaramondAlt-Italic & AGaramondAlt-Regular \\
+        AGaramondExp-Bold & AGaramondExp-BoldItalic \\
+        AGaramondExp-Italic & AGaramondExp-Semibold \\
+        AGaramondExp-SemiboldItalic & AvantGarde-Book \\
+        AvantGarde-BookOblique & AvantGarde-Demi \\
+        AvantGarde-DemiOblique & Bookman-Demi \\
+        Bookman-DemiItalic & Bookman-Light \\
+        Bookman-LightItalic & Courier-Bold \\
+        Courier-BoldOblique & Courier-Oblique \\
+        Courier & Helvetica-Bold \\
+        Helvetica-BoldOblique & Helvetica-Narrow-Bold \\
+        Helvetica-Narrow-BoldOblique & Helvetica-Narrow-Oblique \\
+        Helvetica-Narrow & Helvetica-Oblique \\
+        Helvetica & NewCenturySchlbk-Bold \\
+        NewCenturySchlbk-BoldItalic & NewCenturySchlbk-Italic \\
+        NewCenturySchlbk-Roman & Optima-Bold \\
+        Optima &  Palatino-Bold \\
+        Palatino-BoldItalic & Palatino-Italic \\
+        Palatino-Oblique & Palatino-Roman \\
+        StoneInformal-Bold & StoneInformal-BoldItalic \\
+        StoneInformal-Italic & StoneInformal-Semibold \\
+        StoneInformal-SemiboldItalic & StoneInformal \\
+        StoneSans & StoneSerif-Bold \\
+        StoneSerif-BoldItalic & StoneSerif-Italic \\
+        StoneSerif-Semibold & StoneSerif-SemiboldItalic \\
+        StoneSerif & Symbol \\
+        Times-Bold & Times-BoldItalic \\
+        Times-Italic & Times-Oblique \\
+        Times-Roman & ZapfChancery-MediumItalic \\
+        ZapfDingbats & \\ \hline                               
+    \end{tabular}
+  \end{center}  
+  \caption{Sample list of font names}
+  \label{fig:AFMfonts}
+\end{figure}
+
+
+\subsection{Syntax of EBNF Files}
+\label{sec:syntax}
+
+The following grammar and diagrams describe the standard input format (e.g. without 
+\textbf{-yacc} or \textbf{-happy}) as well as the output format with the \textbf{+ebnf} 
+option. 
+
+\begin{verbatim}
+File            = {Production};
+Production      = Nonterminal [ String ] "=" Term ";" ;
+Term            = Factor / "|" ;         # alternative
+Factor          = ExtAtom + ;            # sequence
+ExtAtom         = Atom
+                | Atom "/" Atom          # repetition through Atom
+                | Atom "+";              # at least one repetition
+Atom            = Nonterminal
+                | String                 # terminal string
+                | "(" Term ")"
+                | "[" Term "]"           # an optional Term
+                | "{" Term "}"           # zero or more repetitions
+                ;
+String          = "\"" { Character } "\"" ;
+Nonterminal     = letter { letter | digit | "_" | "." } ;
+Character       = character 
+                | ["\\"] anycharacter ;
+\end{verbatim}
+
+Or in terms of diagrams (what would you expect):
+\begin{flushleft}
+  \leavevmode\epsfbox{File.eps}
+  \\
+  \leavevmode\epsfbox{Production.eps}
+  \\
+  \leavevmode\epsfbox{Term.eps}
+  \\
+  \leavevmode\epsfbox{Factor.eps}
+  \\
+  \leavevmode\epsfbox{ExtAtom.eps}
+  \\
+  \leavevmode\epsfbox{Atom.eps}
+  \\
+  \leavevmode\epsfbox{String.eps}
+  \\
+  \leavevmode\epsfbox{Nonterminal.eps}
+  \\
+  \leavevmode\epsfbox{Character.eps}
+\end{flushleft}
+
+\noindent These diagrams have been produced with \texttt{Ebnf2ps
+  -tFont Courier-Bold -tBg Black -tColor White -fatLineWidth 50
+  ebnf.BNF '.*'}. 
+
+
+\subsection{Syntax of regular expressions}
+\label{sec:regular}
+
+The regular expressions used to select nonterminal symbols have the following
+syntax, which is similar to the regular expression syntax of \texttt{grep}. 
+
+\begin{verbatim}
+Regexp   = RFactor / "\\|" ["$"];
+RFactor  = RExtAtom + ;
+RExtAtom = RAtom ["*" | "+" | "?"] ;
+RAtom    = character | "\\" character | "." | "\\(" Regexp "\\)" ;
+\end{verbatim}
+
+Regular expressions \texttt{Regexp} may be joined by the infix
+operator \texttt{|}. The resulting regular expression matches any
+string matching either subexpression. A subexpression may be enclosed
+in parenthesis \verb|\(|, \verb|\)| to override precedence rules.
+Repetition takes precedence over concatenation, which in turn takes
+precedence over alternation. A regular expression matching a single
+character may be followed by one of several repetition operators:
+
+\begin{description}
+\item[\texttt{?}] The preceding item is optional and matched at most once.
+\item[\texttt{*}] The preceding item will be matched zero or more times.
+\item[\texttt{+}] The preceding item will be matched one or more times.
+\end{description}
+The period \texttt{.} matches any single character, and the dollar sign 
+\verb|$| match the empty string at the end of a line. Well, graphically, 
+the syntax is\footnote{The diagrams have been produced with:\\
+\texttt{Ebnf2ps -titleFont AvantGarde-Book -ntBoxColor White -fatLineWidth 
+50 regular.BNF '.*'}}:
+
+\begin{flushleft}
+  \leavevmode\epsfbox{Regexp.eps}
+  \\
+  \leavevmode\epsfbox{RFactor.eps}
+  \\
+  \leavevmode\epsfbox{RExtAtom.eps}
+  \\
+  \leavevmode\epsfbox{RAtom.eps}
+\end{flushleft}
+
+
+
+\subsection{Option +unfold}
+\label{sec:unfold}
+
+The option \textbf{+unfold} allows the replacement of nonterminal
+symbols in productions, through the "right side" of the production of
+corresponding nonterminals. The nonterminals, which follows the symbol
+\verb|--| in a command line could be specified by their full names,
+or by regular expressions (see Sec.~\ref{sec:regular}). An example:
+with the grammar \texttt{regular.BNF} for the regular expression
+syntax in section~\ref{sec:regular} should be generated a diagram for
+\texttt{RAtom}, with a replacement of nonterminal \texttt{Regexp}.
+The following diagram is been produced with \texttt{Ebnf2ps +unfold
+regular.BNF RAtom -- Regexp}.
+
+\begin{flushleft}
+  \leavevmode\epsfbox{RAtom_unfold.eps}    
+\end{flushleft}
+
+The following example illustrates the use of regular expressions with
+the option \texttt{+unfold}. In all productions of the grammar file
+\texttt{ebnf.BNF} --- which describes the syntax of EBNF files (see
+Sec.~\ref{sec:syntax}) --- the nonterminal \texttt{String} and all
+nonterminals that match the pattern 
+\begin{verbatim}
+   .*\(t\|T\)erm.*
+\end{verbatim}
+\noindent should be replaced. The next lines shows the command to produce 
+the railroad diagrams and the progress messages of Ebnf2ps.
+
+{\fontsize{8}{9pt}
+\begin{verbatim}
+% Ebnf2ps -verbose -tScale 8 -ntScale 8 +unfold ebnf.BNF '.*' -- String '.*\(t\|T\)erm.*'
+using colors:
+        ntColor          (0,0,0)
+        tColor           (0,0,0)
+        lineColor        (0,0,0)
+        ntBoxColor       (0,0,0)
+        tBoxColor        (0,0,0)
+        ntBg             (255,255,255)
+        tBg              (255,255,255)
+        titleColor       (0,0,0)
+from rgbPathDefault: ["/usr/lib/X11", "/usr/local/X11R5/lib/X11"]
+generating nonterminals: [".*"]
+from ebnf.BNF
+using input path ["."]
+using ebnfInput
+unfold nonterminals:
+        Nonterminal
+        String
+        Term
+in the following productions
+        Production
+        Atom
+produce layout and output
+\end{verbatim}
+}
+
+\noindent Well, graphically that is:
+\begin{flushleft}
+  \leavevmode\epsfbox{Atom_unfold.eps}\\
+  \leavevmode\epsfbox{Production_unfold.eps}
+\end{flushleft}
+
+%
+\subsection{Environment variables}
+
+The format of search pathes is a colon separated list of directories. The
+default path is inserted in place of an empty directory in the list. Any file
+name starting with \texttt{/} is taken as an absolute name and any file name
+starting with \texttt{.} is taken relative to the current working directory.
+
+\begin{description}
+\item[AFMPATH] search path for Adobe font metric files. 
+\item[EBNFINPUTS] search path for grammar input files.
+\item[RGBPATH] search path for the color definitions.
+\end{description}
+
+
+\section{How to change it}
+
+In order to add new options to the program you will need a modified copy of the
+program \texttt{Mkhprog} with kind permission of the author Nick North 
+(\texttt{ndn@seg.npl.co.uk}) which is available from URL 
+\begin{verbatim}
+http://www-pu.informatik.uni-tuebingen.de/users/thiemann/haskell/ebnf2ps/
+\end{verbatim}
+
+\end{document}
+%%
+

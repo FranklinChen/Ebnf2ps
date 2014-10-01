@@ -1,0 +1,292 @@
+#APPENDIX A: SUMMARY OF GRAMMAR
+#
+#This section gives a summary of the grammar for the  language  used  by
+#Gofer.  The non-terminals <interp> and <module> describe the syntax  of
+#expressions that can be entered into the Gofer interpreter and that  of
+#files of definitions that can be loaded into Gofer respectively.
+#
+#The following notational conventions are used in the Grammar  which  is
+#specified using a variant of BNF:
+#
+#  o <angle brackets> are used to distinguish names of nonterminals from
+#    keywords.
+#
+#  o vertical | bars  are used to separate alternatives.
+#
+#  o {braces} enclose items which may be repeated zero or more times.
+#
+#  o [brackets] are used for optional items.
+#
+#  o (parentheses) are used for grouping.
+#
+#  o "quotes" surround characters which might otherwise be confused with
+#    the notations introduced above.
+#
+#The following terminal symbols are used but not defined by the grammar:
+#
+#  varid    identifier beginning with lower case letter as described in
+#           section 6.
+#  conid    like varid, but beginning with upper case letter.
+#  varsym    operator symbol not beginning with a colon, as described in
+#           section 6.
+#  consym    constructor function operator, like varsym, but beginning
+#           with a colon character.
+#  integer  integer constant, as described in section 7.3.
+#  float    floating point constant, as described in section 7.4.
+#  char     character constant, as described in section 7.5.
+#  string   string constant, as described in section 7.7.
+#
+#
+#Top-level grammar
+#-----------------
+#
+    module   = ( "{" topdecls "}"             #  module
+#
+		);
+    interp   = ( exp [whereClause]                #  top-level expression
+#
+		);
+    topdecls = ( topdecls ";" topdecls         #  multiple declarations
+                |  dataDecl
+                |  typeDecl
+                |  infixDecl
+                |  primDecl
+                |  class                        #  class declaration
+                |  inst                         #  instance declaration
+                |  decls                        #  value declarations
+#
+		);
+dataDecl	= ("data" conid {varid} "=" (constr)/"|"     #  datatype declaration
+		);
+typeDecl	= ("type" conid {varid} "=" type        #  synonym declaration
+		);
+infixDecl	= (( "infixl" | "infixr" | "infix")
+			 [digit] (op)/","  #  fixity declarations
+		);
+#    simple  = ( conid {varid}                  #  type declaration lhs
+#		);
+#
+    constrs  = ( constrs "|" constrs        #  multiple constructors
+                |  type consym type            #  infix constructor
+                |  conid {type}                 #  constructor, n>=0
+		);
+     constr  =   type consym type            #  infix constructor
+                |  conid {type}                 #  constructor, n>=0
+		;
+#
+primDecl	= ("primitive" prims "::" type    #  primitive bindings
+		);
+    prims    = 
+                 (var string)/","                 #  primitive binding
+		;
+#
+#Type expressions
+#----------------
+#
+    sigType  = ( [context "=>" ] type         #  [qualified] type
+#
+		);
+    context  = ( "(" [(pred)/ "," ] ")"    #  general form
+                |  pred                         #  singleton context
+		);
+    pred     = ( conid (type)+           #  predicate
+#
+		);
+    type     = ( ctype [ "->" type ]          #  function type
+		);
+    ctype    = ( conid {atype}                #  datatype or synonym
+                |  atype
+		);
+    atype    = ( varid                          #  type variable
+                |  "(" ")"                        #  unit type
+                |  "(" type ")"                 #  parenthesised type
+                |  "(" type "," (type)/"," ")"#  tuple type
+                |  "[" type "]"                 #  list type
+#
+#Class and instance declarations
+#-------------------------------
+#
+		);
+    class    = ( "class" [context "=>"] pred [cbody]
+		);
+    cbody    = ( "where" "{" cdecls "}"         #  class body
+		);
+    cdecls   = ( cdecls ";" cdecls             #  multiple declarations
+                |  (var)/ ","  "::" type      #  member functions
+                |  fun rhs [whereClause]          #  default bindings
+#
+		);
+    inst     = ( "instance" [context "=>"] pred [ibody]
+		);
+    ibody    = ( "where" "{" idecls "}"         #  instance body
+		);
+    idecls   = ( idecls ";" idecls             #  multiple declarations
+                |  fun rhs [whereClause]          #  member definition
+#
+#Value declarations
+#------------------
+#
+		);
+    decls  = ( decls ";" decls                 #multiple declarations
+              |  (var)/"," "::" sigType     #type declaration
+              |  fun rhs [whereClause]            #function binding
+              |  lhsPat rhs [whereClause]            #pattern binding, PJT: was pat
+#
+		);
+    rhs    = ( "=" exp                          #simple right hand side
+              |  (gdRhs)+                #guarded right hand sides
+#
+		);
+    gdRhs  = ( "|" exp "=" exp                #guarded right hand side
+#
+		);
+    whereClause  = ( "where" "{" decls "}"            #local definitions
+#
+		);
+    fun    = ( var                            #function of arity 0
+              |  pat varop pat              #infix operator
+              |  "(" pat varop ")"            #section-like notation
+              |  "(" varop pat ")"
+              |  fun apat                     #function with argument
+              |  "(" fun ")"                    #parenthesised lhs
+		);
+#
+#Expressions
+#-----------
+#
+    exp    = ( "\\" (apat)+  "->" exp       #lambda expression
+              |  "let" "{" decls "}" "in" exp     #local definition
+              |  "if" exp "then" exp "else" exp   #conditional expression
+              |  "case" exp "of" "{" alts "}"     #case expression
+              |  opExp "::" sigType             #typed expression
+              |  opExp
+		);
+    opExp  = ( opExp op opExp             #operator application
+              |  pfxExp
+		);
+    pfxExp = ( "-" appExp                       #negation
+              |  appExp
+		);
+    appExp = ( appExp atomic                #function application
+              |  atomic
+		);
+    atomic = ( var                            #variable
+              |  con                          #constructor
+              |  integer                          #integer literal
+              |  float                            #floating point literal
+              |  char                             #character literal
+              |  string                           #string literal
+              |  "(" ")"                          #unit element
+              |  "(" exp ")"                    #parenthesised expr.
+              |  "(" exp op ")"                     #sections
+              |  "(" op exp ")"
+              |  "[" list "]"                   #list expression
+              |  "(" exp "," (exp)/","  ")"   #tuple
+		);
+#
+    list   = ( [ (exp)/","  ]              #enumerated list
+              |  exp "|" quals                #list comprehension
+              |  exp ".."                         #arithmetic sequence
+              |  exp "," exp ".."
+              |  exp ".." exp
+              |  exp "," exp ".." exp
+		);
+    quals  = ( quals "," quals                 #multiple qualifiers
+              |  pat "<-" exp                   #generator
+              |  "let" "{" decls "}"            #local definition
+              |  exp                            #boolean guard
+		);
+#
+    alts   = ( alts ";" alts                   #multiple alternatives
+              |  pat	( "->" exp                         #single alternative
+              		|  (gdAlt)+                #guarded alternatives
+			)  [whereClause]         #alternative
+		);
+#    altRhs = ( "->" exp                         #single alternative
+#              |  (gdAlt)+                #guarded alternatives
+#		);
+    gdAlt  = ( "|" exp "->" exp               #guarded alternative
+		);
+#
+#Patterns
+#--------
+#
+    pat    = ( pat conop pat              #operator application
+              |  (var | "_") "+" integer                #(n+k) pattern
+              |  (apat)+
+		);
+    lhsPat = 	( lhsPat conop lhsPat		#PJT: left hand sides of pattern bindings
+		| apat
+		);
+    apat   = ( var                            #variable
+              |  var "@" pat                    #as pattern
+              |  "~" pat                          #irrefutable pattern
+              |  "_"                                #wildcard
+              |  con                          #constructor
+              |  integer                          #integer literal
+              |  char                             #character literal
+              |  string                           #string literal
+              |  "(" ")"                          #unit element
+              |  "(" pat ")"                    #parenthesised expr.
+              |  "(" pat conop ")"                  #sections
+              |  "(" conop pat ")"
+              |  "[" [ (pat)/"," ] "]"      #list
+              |  "(" pat "," (pat)/","  ")"   #tuple
+		);
+#
+#Variables and operators
+#-----------------------
+#
+    var    = ( varid  |  "(" "-" ")"          #variable
+		|  "(" varsym ")"        #variable identifier
+		);
+    op     = ( varop  |  conop   | "-"      #operator
+		);
+#
+    varop  = ( varsym    |  "`" varid "`"            #variable operator
+		);
+#
+    con  = ( conid    |  "(" consym ")"        #constructor identifier
+		);
+    conop  = ( consym    |  "`" conid "`"            #constructor operator
+		);
+#
+#Finally, PJT's definitions for literals
+#---------------------------------------
+#
+integer= (digit)+ ;
+float  = integer  "." integer [ ("e" | "E") [ "+"|"-" ] integer ];
+
+varsym		= ((symbol | preSymbol) { symbol | ":" });
+consym		= (":" {symbol | ":"});
+
+varid		= (small { letter | digit | "_" | "'" });
+conid		= (large { letter | digit | "_" | "'" });
+string		= "\"" { character } "\"" ;
+char		= "'" character "'" ;
+
+character	= (	letter |
+			digit | 
+			symbol | 
+			preSymbol | 
+			":" | 
+			"\\" ( integer | "n" | "t" | "b" | "\\" | "'" | "\"" ) );
+
+# now this is really trivial...
+
+letter		= ( small | large);
+small	 	= ( "a"| "b"| "c"| "d"| "e"| "f"| "g"| "h"| "i"| "j"| "k"| "l"| "m"| "n"| "o"
+		  | "p"| "q"| "r"| "s"| "t"| "u"| "v"| "w"| "x"| "y"| "z");
+large		= ( "A"| "B"| "C"| "D"| "E"| "F"| "G"| "H"| "I"| "J"| "K"| "L"| "M"
+		  | "N"| "O"| "P"| "Q"| "R"| "S"| "T"| "U"| "V"| "W"| "X"| "Y"| "Z" );
+digit		= ( "0"| "1"| "2"| "3"| "4"| "5"| "6"| "7"| "8"| "9" );
+octit		= ( "0"| "1"| "2"| "3"| "4"| "5"| "6"| "7" );
+hexit		= ( digit | "A"| "B"| "C"| "D"| "E"| "F"| "a"| "b"| "c"| "d"| "e"| "f" );
+cntrl		= ( large | "@"| "["| "|"| "]"| "^"| "_" );
+charesc		= ( "a"| "b"| "f"| "n"| "r"| "t"| "v"| "\\"| "\""| "'"| "&" );
+
+symbol		=("!" | "@" | "#" | "$" | "%" | "^" | "&" | "*" | "+" | "." | "/"
+		| "<" | "=" | ">" | "?" | "\\" | "|");
+
+preSymbol	= ("-" | "~");
+

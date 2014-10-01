@@ -1,0 +1,4 @@
+Regexp	 = RFactor / "\\|" ["$"];
+RFactor	 = RExtAtom + ;
+RExtAtom = RAtom ["*" | "+" | "?"] ;
+RAtom	 = character | "\\" character | "." | "\\(" Regexp "\\)" ;

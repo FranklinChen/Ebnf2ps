@@ -1,0 +1,17 @@
+File		= {Production};
+Production	= Nonterminal [ String ] "=" Term ";" ;
+Term		= Factor / "|" ;		# alternative
+Factor		= ExtAtom + ;			# sequence
+ExtAtom		= Atom
+		| Atom "/" Atom			# repetion through Atom
+		| Atom "+";			# at least one repetion
+Atom		= Nonterminal
+		| String			# terminal string
+		| "(" Term ")"
+		| "[" Term "]"			# an optional Term
+		| "{" Term "}"			# zero or more repetions
+		;
+String		= "\"" { Character } "\"" ;
+Nonterminal	= letter { letter | digit | "_" | "." } ;
+Character       = character
+                | ["\\"] anycharacter ;

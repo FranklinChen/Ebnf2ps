@@ -1,0 +1,1 @@
+                               "/usr/local/tex/Adobe"

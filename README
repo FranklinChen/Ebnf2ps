@@ -1,0 +1,41 @@
+What is Ebnf2ps?
+
+A context free grammar in EBNF is translated into syntax diagrams
+(also known as railroad diagrams). Output is in encapsulated
+Postscript, ready to use with LaTeX, or in Fig.
+The syntax of the input file is specified in ebnf.BNF.
+There is a sample file called gofer.BNF (guess what it is...) and
+a Postscript file called examples.ps with examples for the three
+possible input formats Ebnf, happy and yacc (Gofer's BNF,
+Ebnf2psParser.ly and the LALR(1) syntax of Haskell 1.2).
+Ebnf2ps -help gives some first aid.
+
+[gofer's BNF is originally taken from Mark Jones's gofer distribution]
+
+Instructions to build Ebnf2ps, the ultimate EBNF illustrator.
+
+0. cd Ebnf2ps/src
+1. edit the Makefile to reflect your Haskell compiler, for example
+	HC= ghc
+2. find out where your TeX installation stores .afm-files (Adobe font
+   metric files). Then you can change the variable "AFMPATH" in the 
+   Makefile or you can set the environment variable AFMPATH when 
+   running the program. These files are absolutely necessary. If you 
+   can't find them, get them from ftp://ftp.adobe.com/pub/adobe/AFMFiles/
+3. change the variable "RGBPATH" to contain the directory where
+   your X installation stores its color data base (usually
+   /usr/lib/X11/rgb.txt). This can also be corrected later with the
+   environment variable "RGBPATH".
+   There are fallback color definitions for the 8 digital colors
+   (black, white, blue, green, cyan, red, magenta, yellow), so
+   nothing needs be done if that's enough for you.
+4. make
+
+Alternatively, if you have Hugs-1.4-June1998 installed on your system
+(must be compiled with the -F options enabled), then you can use 
+
+make Ebnf2psrun args='PUT-ARGS-FOR-EBNF2PS-HERE'
+
+to run Ebnf2ps. However, this requires you to have a Haskell
+preprocessor on your system, as defined by the makefile variable
+HSCPP. 
