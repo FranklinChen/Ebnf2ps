@@ -1,1 +1,0 @@
-int LOGBYTESPERWORD = 2;

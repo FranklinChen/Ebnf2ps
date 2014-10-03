@@ -17,7 +17,7 @@ module GrammarUnfold (
 import AbstractSyntax
 import GrammarTransform 
 import StringMatch      (stringMatch)
-import List
+import Data.List
 
 import qualified Data.Map (Map, keys, elems, findWithDefault, fromList)
 

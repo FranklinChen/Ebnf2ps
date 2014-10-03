@@ -17,7 +17,7 @@
 module Fonts (FONT, makeFont, fontDescender, stringWidth, stringHeight, fontName, fontScale, noFont)
 where
 
-import Char
+import Data.Char
 import Numeric
 
 data FONT = FONT String Int Int (String -> Int)

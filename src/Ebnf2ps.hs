@@ -25,11 +25,10 @@ import Defaults		(afmPathDefault, ebnfInputDefault, rgbPathDefault)
 import PathExpansion	(expandPath) 
 import Color
 import Info
-import IO
-import Monad
+import System.Time
+import System.Environment
+import Control.Monad
 import Numeric
-import System 
-import Time
 
 --------------------------------------------------------------------------------
 main :: IO () 

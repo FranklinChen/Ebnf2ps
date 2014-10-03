@@ -29,8 +29,9 @@
 module IOSupplement (getPath, readPathFile, readRGBPathFile)
 where
 
-import System
-import IO
+import System.IO
+import System.IO.Error
+import System.Environment
 
 #ifdef __HBC__
 ioError = fail
