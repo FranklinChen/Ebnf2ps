@@ -1,11 +1,13 @@
 Name:                Ebnf2ps
 Version:             1.0.12
 Synopsis:               Peter's Syntax Diagram Drawing Tool
-Homepage:            http://www.informatik.uni-freiburg.de/~thiemann/haskell/ebnf2ps/
+Homepage:            https://github.com/FranklinChen/Ebnf2ps
+Bug-reports:         https://github.com/FranklinChen/Ebnf2ps/issues
 License:             BSD3
 License-file:        LICENSE
 Author:                 Peter Thiemann <thiemann@acm.org>
 Maintainer:          Franklin Chen <franklinchen@franklinchen.com>
+Copyright:           1993-2014
 Category:            Language
 Build-type:          Simple
 Cabal-version:       >=1.6
