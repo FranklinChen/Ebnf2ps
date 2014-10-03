@@ -23,7 +23,7 @@
 module Color where
 -- (Color (..), lookupColor, showsColor, showsAColor, prepareColors)
 
-import Char
+import Data.Char
 import Numeric
 
 type Color = (Int, Int, Int)

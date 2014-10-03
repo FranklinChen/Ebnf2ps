@@ -3,10 +3,11 @@ module PathExpansion (expandPath)
 where
  
 #ifdef __GLASGOW_HASKELL__
-import System
-import Directory
-import Monad
-import IO
+import System.Directory
+import System.Environment
+import Control.Monad
+import System.IO
+import System.IO.Error
 import System.Posix.User (getUserEntryForName, homeDirectory)
 #endif
 
@@ -99,8 +100,8 @@ replaceEnv (x:xs) = do t <- replaceEnv xs
 		       return (x:t)
 
 getEnv2 t
-	|t == "HOME" = catch (getEnv t) (\e -> if IO.isDoesNotExistError e then return ['.'] else ioError e)
-	|otherwise = catch (getEnv t) (\e -> if IO.isDoesNotExistError e then return [] else ioError e)
+	|t == "HOME" = catch (getEnv t) (\e -> if isDoesNotExistError e then return ['.'] else ioError e)
+	|otherwise = catch (getEnv t) (\e -> if isDoesNotExistError e then return [] else ioError e)
 -------------------------------------------------------	
 
 ---------------- Teilen nach Doppelpunkt --------------

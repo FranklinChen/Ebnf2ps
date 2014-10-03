@@ -1,6 +1,6 @@
 module CommandLine (parse_cmds) where
-import System
-
+import System.IO
+import System.Environment
 
 defaultArgs :: Args
 defaultArgs  =  MkArgs "Times-Roman" 10 "black" "Times-Roman" 10 "black" "white" "black" "Times-Roman" 10 "black" "white" "black" "black" 500 500 30 100 200 "rgb.txt" False False False False True False False False False

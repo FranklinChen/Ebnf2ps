@@ -13,7 +13,7 @@ module GrammarTransform
 where
 
 import AbstractSyntax
-import List
+import Data.List
 
 
 data RInfo

@@ -3,7 +3,7 @@ module Lexer where
 -- Last Modified By: M. Walter
 --
 
-import Char
+import Data.Char
 
 ------------------------------------------------------------------------------
 --NOW the lexer
