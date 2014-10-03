@@ -17,7 +17,7 @@ instance Show Token where
   showsPrec n (Symbol "\n") = showString "\n"
   showsPrec n (Symbol s) = showChar '<' . showString s . showString "> "
   showsPrec n (String s) = showChar '"' . showString s . showString "\" "
-  showsPrec n (Number s) = showChar ' ' . showString s . showChar ' ' 
+  showsPrec n (Number s) = showChar ' ' . showString s . showChar ' '
   showList [] = id
   showList (x:xs) = shows x . showList xs
 
@@ -34,10 +34,10 @@ lexer ('\'':cs) = String (oneChar): lexer srest
 	where (oneChar, srest) = lexChar cs
 lexer ((c@'\n'):cs) = Symbol [c]: lexer cs
 lexer (c:cs)
-	   | isNewline c = Symbol [c]: lexer cs 
+	   | isNewline c = Symbol [c]: lexer cs
 	   | isSpace c = lexer cs
 	   | isDot c = Ident (c:idchars): lexer irest    -- 1.01
-	   | isAlpha c = Ident (c:idchars): lexer irest  
+	   | isAlpha c = Ident (c:idchars): lexer irest
 	   | isSymbolChar c = Symbol(c:sychars): lexer srest
 	   | isDigit c = Number (c:digits): lexer nrest
 	   | otherwise = Symbol([c]): lexer cs
@@ -84,4 +84,3 @@ isString (String _) = True
 isString _ = False
 
 getString (String s) = s
-

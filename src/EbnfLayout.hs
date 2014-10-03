@@ -51,19 +51,19 @@ makePictureLayout
 
   mkTitleNonTerminal :: String -> Int -> Int -> Container
   mkTitleNonTerminal str rx ry = (rx, ry, width, height, 0, AString titleClr titleFont str)
-	where 
+	where
 	      width  = stringWidth  titleFont str
 	      height = stringHeight titleFont str
 
   mkNonTerminal :: String -> Int -> Int -> Container
   mkNonTerminal str rx ry = (rx, ry, width, height, 0, AString ntColor ntFont str)
-	where 
+	where
 	      width  = stringWidth  ntFont str
 	      height = stringHeight ntFont str
 
   mkTerminal :: String -> Int -> Int -> Container
   mkTerminal str rx ry = (rx, ry, width, height, 0, AString tColor tFont str)
-	where 
+	where
 	      width  = stringWidth  tFont str
 	      height = stringHeight tFont str
 
@@ -87,7 +87,7 @@ makePictureLayout
   ------------------------------------------------------------------------
 
   withTentacle :: Int -> Int -> Int -> Production -> Container
-  withTentacle rx ry direction prod = 
+  withTentacle rx ry direction prod =
 	(rx, ry, width, height, inOutY, AComposite [contents, theLine, theArrow])
 	where (_, _, width1, height, inOutY, _) = contents
 	      contents = makePicture rx1 0 direction prod
@@ -101,7 +101,7 @@ makePictureLayout
 
   makePicture :: Int -> Int -> Int -> Production -> Container
 
-  makePicture rx ry direction (ProdProduction ntName ntAliases ProdEmpty) = 
+  makePicture rx ry direction (ProdProduction ntName ntAliases ProdEmpty) =
 	(rx, ry, width, height, 0, AComposite [content])
 	where content@(_,_, width2, height2,_,_) = mkTitleNonTerminal str rx2 ry2
 	      ry1 = fatLineWidth `div` 2
@@ -262,7 +262,7 @@ makePictureLayout
 			where  f x = mkLine (x-borderDistX) inOutY borderDistX 0
 -}
 
-  makePicture rx ry direction (ProdFactor [prod1,prod2]) 
+  makePicture rx ry direction (ProdFactor [prod1,prod2])
     | direction > 0 =
 	let   (_, _, width1, height1, inOutY1, _) = content1
 	      content1 = withTentacle rx1 ry1 direction prod1
@@ -359,7 +359,7 @@ makePictureLayout
 	      variableglue
 		| direction < 0 = [mkArrow (2*borderDistX) (inOutY'+borderDistY) (-direction)]
 		| otherwise     = [mkArrow (width-2*borderDistX) (inOutY'+borderDistY) (-direction)]
-	      
+
   makePicture rx ry direction (ProdRepeat1 prod) =
 	(rx, ry, width, height, inOutY, AComposite (content:glue))
 	where (_, _, width', height', inOutY', gobj) = content
@@ -380,7 +380,7 @@ makePictureLayout
 		mkLine (width-borderDistX) (inOutY+borderDistY) 0 (height'-inOutY'-borderDistY),
 		mkLine rx' height width' 0,
 		mkArrow (rx'+width' `div` 2) height (-direction)]
-	      
+
   makePicture rx ry direction (ProdRepeatWithAtom prod1 prod2) =
 	(rx, ry, width, height, inOutY, AComposite (content1:content2:glue))
 	where (_, _, width1, height1, inOutY1, _) = content1
@@ -412,5 +412,3 @@ makePictureLayout
 	      variableglue
 		| direction > 0 = [mkArrow (2*borderDistX + adjx2 + width2) (ry2+inOutY2) (-direction)]
 		| otherwise     = [mkArrow (2*borderDistX + adjx2) (ry2+inOutY2) (-direction)]
-
-

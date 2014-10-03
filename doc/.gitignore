@@ -1,0 +1,8 @@
+auto
+*.dvi
+*.aux
+*.log
+*.fls
+*.out
+*_latexmk
+*-eps-converted-to*

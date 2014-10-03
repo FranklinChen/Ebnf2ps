@@ -95,5 +95,3 @@ parseAfmFile (_:lines) = parseAfmFile lines
 skipWhite = dropWhile isSpace
 skipWhiteOrSemi = dropWhile isSkipChar
 isSkipChar c = isSpace c || c == ';'
-
-		

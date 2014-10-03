@@ -27,6 +27,7 @@ import Color
 import Info
 import System.Time
 import System.Environment
+import System.IO.Error (catchIOError)
 import Control.Monad
 import Numeric
 
@@ -177,7 +178,7 @@ program
 	  let  fileName = file++".BNF" in
 	  when ebnfOutput $
 	    do when verbose (putStrLn ('\t':fileName))
-	       catch (writeFile fileName (genEbnfFile file grammar_info))
+	       catchIOError (writeFile fileName (genEbnfFile file grammar_info))
 	             (\e -> putStrLn ("Problem writing "++fileName))
 
 --------------------------------------------------------------------------------
@@ -242,7 +243,7 @@ matchInput (bnfName:more) = (bnfName,nonterminals, red_nonterminals)
 
 writeAll ext [] = putStr "\n"
 writeAll ext ((ntName, content): more) =
-    do catch (writeFile fileName content)
+    do catchIOError (writeFile fileName content)
              (\e -> putStr ("Problem writing "++fileName))
        writeNext
     where

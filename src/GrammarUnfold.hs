@@ -1,9 +1,9 @@
---                            -*- Mode: Haskell -*- 
+--                            -*- Mode: Haskell -*-
 -- Copyright © 1996, 1998 by Peter Thiemann
--- GrammarUnfold.hs 
+-- GrammarUnfold.hs
 -- main functions for ebnfInput, yaccInput and happyInput.
 -- Initial revision
--- 
+--
 -- Last Modified By: M. Walter
 --
 
@@ -13,9 +13,9 @@ module GrammarUnfold (
      rawEBNFInput, rawHappyInput, rawYaccInput,
      getNonterminals, getTerminals, getReduces, getProdsInfo, getEmpties, getRedProds
      ) where
- 
+
 import AbstractSyntax
-import GrammarTransform 
+import GrammarTransform
 import StringMatch      (stringMatch)
 import Data.List
 
@@ -25,7 +25,7 @@ type FiniteMap k x = Data.Map.Map k x
 keysFM = Data.Map.keys
 eltsFM = Data.Map.elems
 listToFM = Data.Map.fromList
-lookupWithDefaultFM theMap theDefault theKey = 
+lookupWithDefaultFM theMap theDefault theKey =
   Data.Map.findWithDefault theDefault theKey theMap
 
 type UnfoldInfo = FiniteMap String Production
@@ -34,12 +34,12 @@ disjointLists [] bs = True
 disjointLists (a:as) bs | a `elem` bs = False
 			| otherwise = disjointLists as bs
 
-type Alphabet    = ([String],      -- nonterminals 
-  	            [String])      -- terminals 
+type Alphabet    = ([String],      -- nonterminals
+  	            [String])      -- terminals
 
 
 data GrammarInfo = GrammarInfo
- 		 [Production]	   -- all productions 
+ 		 [Production]	   -- all productions
  		 [String]	   -- Nonterminals
  		 [String]	   -- Terminals
  		 [String]	   -- Nonterminals (option: +unfold)
@@ -50,10 +50,10 @@ data GrammarInfo = GrammarInfo
 
 -- happyInput
 
-rawHappyInput :: Bool		   -- flag: +ebnf 
-	      -> Bool		   -- flag: +simplify 
-	      -> Bool		   -- flag: +unfold 
-	      -> [String] 
+rawHappyInput :: Bool		   -- flag: +ebnf
+	      -> Bool		   -- flag: +simplify
+	      -> Bool		   -- flag: +unfold
+	      -> [String]
 	      -> [Production] -> GrammarInfo
 rawHappyInput ebnfoutput doSimplify True unfold_nts prods =
      let (nts, prods') = (if doSimplify then happysimplifyExt else happysimplify) prods
@@ -61,59 +61,59 @@ rawHappyInput ebnfoutput doSimplify True unfold_nts prods =
  	 (nonterminals, terminals) | ebnfoutput = allSymbols prods''
 				   | otherwise  = ([], [])
      in GrammarInfo prods'' nonterminals terminals rnts names nts
- 
+
 rawHappyInput ebnfoutput doSimplify False _ prods =
-     let (nts ,prods') = (if doSimplify then happysimplifyExt else happysimplify) prods 
+     let (nts ,prods') = (if doSimplify then happysimplifyExt else happysimplify) prods
 	 (nonterminals, terminals) | ebnfoutput = allSymbols prods'
 				   | otherwise  = ([], [])
-     in GrammarInfo prods' nonterminals terminals [] [] nts 
+     in GrammarInfo prods' nonterminals terminals [] [] nts
 
 
 
 -- yaccInput
 
-rawYaccInput :: Bool		   -- flag: +ebnf 
-	     -> Bool		   -- flag: +simplify 
-	     -> Bool		   -- flag: +unfold 
-	     -> [String] 
+rawYaccInput :: Bool		   -- flag: +ebnf
+	     -> Bool		   -- flag: +simplify
+	     -> Bool		   -- flag: +unfold
+	     -> [String]
 	     -> [Production] -> GrammarInfo
 rawYaccInput ebnfoutput doSimplify True unfold_nts prods =
     let (nts, prods') = (if doSimplify then yaccsimplifyExt else yaccsimplify) prods
 	(rnts, names, prods'') = unfoldGrammar unfold_nts prods'
 	((nonterminals , terminals), oprods) | ebnfoutput = (allSymbols prods'', reverse prods'')
 					     | otherwise  = (([], []), prods'')
-    in  GrammarInfo oprods nonterminals terminals rnts names nts 
- 
+    in  GrammarInfo oprods nonterminals terminals rnts names nts
+
 rawYaccInput ebnfoutput doSimplify False _ prods =
-    let (nts ,prods') = (if doSimplify then yaccsimplifyExt else yaccsimplify) prods 
+    let (nts ,prods') = (if doSimplify then yaccsimplifyExt else yaccsimplify) prods
 	((nonterminals, terminals), oprods) | ebnfoutput = (allSymbols prods', reverse prods')
 					    | otherwise  = (([], []), prods')
-    in  GrammarInfo oprods nonterminals terminals [] [] nts 
+    in  GrammarInfo oprods nonterminals terminals [] [] nts
 
 
 
 -- ebnfInput
 
-rawEBNFInput :: Bool		   -- flag: +simplify 
-	     -> Bool		   -- flag: +unfold 
+rawEBNFInput :: Bool		   -- flag: +simplify
+	     -> Bool		   -- flag: +unfold
 	     -> [String] -> [Production] -> GrammarInfo
 rawEBNFInput doSimplify True unfold_nts prods =
     let prods' = if doSimplify then simplify prods else prods
 	(rnts, names, prods'') = unfoldGrammar unfold_nts prods'
     in GrammarInfo prods'' [] [] rnts names []
- 
-rawEBNFInput doSimplify False _ prods = 
+
+rawEBNFInput doSimplify False _ prods =
     GrammarInfo (if doSimplify then simplify prods else prods) [] [] [] [] []
 
 --------------------------------------------------------------------------------------------------
 
-unfoldGrammar :: [String] 
-	      -> [Production] 
+unfoldGrammar :: [String]
+	      -> [Production]
 	      --  (nonterminals, nonterminals with a replacement, new productions)
 	      -> ([String], [String], [Production])
 unfoldGrammar [] prods = ([], [], prods)
 unfoldGrammar rnts prods = unfoldGrammar' rnts prods
- 
+
 unfoldGrammar' :: [String] -> [Production] -> ([String],[String],[Production])
 unfoldGrammar' [] prods = ([], [], prods)
 unfoldGrammar' rnts prods =
@@ -121,11 +121,11 @@ unfoldGrammar' rnts prods =
      where  (rntsInfo,reducedProds, prodsToUnfold, rest) = splitInputGrammar rnts prods
 	    rntsFM = listToFM rntsInfo
  	    prods' = map (unfoldSimp . unfoldProd []) prodsToUnfold
- 
+
  	    unfoldProd unf (ProdProduction nt ntAliases p) = ProdProduction nt ntAliases (unfoldProd unf p)
 	    unfoldProd unf (ProdTerm prods) = ProdTerm (map (unfoldProd unf) prods)
 	    unfoldProd unf (ProdFactor prods) = ProdFactor (map (unfoldProd unf) prods)
- 	    unfoldProd unf p@(ProdNonterminal nt) 
+ 	    unfoldProd unf p@(ProdNonterminal nt)
 	      | nt `elem` unf = p
 	      | otherwise     = unfoldProd (nt:unf) $ lookupWithDefault p nt rntsFM
  	    unfoldProd unf (ProdOption p) = ProdOption (unfoldProd unf p)
@@ -134,7 +134,7 @@ unfoldGrammar' rnts prods =
  	    unfoldProd unf (ProdRepeat1 p) = ProdRepeat1 (unfoldProd unf p)
  	    unfoldProd unf (ProdSlash p) = ProdSlash (unfoldProd unf p)
  	    unfoldProd unf p = p
- 
+
  	    unfoldSimp (ProdProduction nt ntAliases p) = ProdProduction nt ntAliases (unfoldSimp p)
  	    unfoldSimp (ProdTerm prods) = ProdTerm (map unfoldSimp prods)
  	    unfoldSimp (ProdFactor prods) = ProdFactor (map unfoldSimp prods)
@@ -147,12 +147,12 @@ unfoldGrammar' rnts prods =
  	    unfoldSimp (ProdRepeat1 p) = ProdRepeat1 (unfoldSimp p)
  	    unfoldSimp (ProdSlash p) = ProdSlash (unfoldSimp p)
  	    unfoldSimp p = p
-     
+
 
 lookupWithDefault :: Production -> String -> UnfoldInfo -> Production
 lookupWithDefault deflt nt info =
     case (lookupWithDefaultFM info deflt nt) of
-	(ProdProduction nt' _ ProdEmpty) -> deflt 
+	(ProdProduction nt' _ ProdEmpty) -> deflt
 	(ProdProduction _ _ p) -> p
 	p -> p
 
@@ -169,7 +169,7 @@ splitInputGrammar rnts prods
 
 
 allSymbols :: [Production] -> Alphabet
-allSymbols prodsInput = 
+allSymbols prodsInput =
     (\(nts,ts) -> (nts, nub ts)) $ (foldr f ([],[]) prodsInput)
     where f (ProdProduction nt _ p) (nts, ts) = (nt:nts, (nub (freets p))++ts)
 	    -- compute the set of all terminals in a Production
@@ -184,14 +184,11 @@ allSymbols prodsInput =
 	  freets (ProdPlus)                 = []
 	  freets (ProdEmpty)                = []
 	  freets (ProdSlash p)              = freets p
- 
- 	
+
+
 getProdsInfo    (GrammarInfo prods _ _ _ _ _) = prods
 getNonterminals (GrammarInfo _ nts _ _ _ _)   = nts
 getTerminals    (GrammarInfo _ _ ts _ _ _)    = ts
 getReduces      (GrammarInfo _ _ _ rs _ _)    = rs
 getRedProds     (GrammarInfo _ _ _ _ rp _)    = rp
 getEmpties      (GrammarInfo _ _ _ _ _ es)    = es
-
-	    
-	

@@ -1,15 +1,14 @@
 Name:                Ebnf2ps
-Version:             1.0.11
+Version:             1.0.12
 Synopsis:               Peter's Syntax Diagram Drawing Tool
 Homepage:            http://www.informatik.uni-freiburg.de/~thiemann/haskell/ebnf2ps/
 License:             BSD3
 License-file:        LICENSE
 Author:                 Peter Thiemann <thiemann@acm.org>
-Maintainer:             Peter Thiemann <thiemann@acm.org>
+Maintainer:          Franklin Chen <franklinchen@franklinchen.com>
 Category:            Language
 Build-type:          Simple
-Cabal-version:       >=1.2
-Tested-With:            GHC == 6.10.4, GHC == 6.12.3, GHC == 7.0.4, GHC == 7.2.2
+Cabal-version:       >=1.6
 Description:            Ebnf2ps generates nice looking syntax diagrams in EPS
                         and FIG format from EBNF specifications and from yacc,
                         bison, and Happy input grammars. The diagrams can be
@@ -17,14 +16,14 @@ Description:            Ebnf2ps generates nice looking syntax diagrams in EPS
                         texts created with other popular document preparation
                         systems.
 
-Extra-source-files:
+Extra-source-files: README.md,
           examples/ebnf.BNF examples/gofer.BNF examples/regular.BNF, examples/examples.ps,
           doc/Atom.eps, doc/ExtAtom.eps, doc/Factor.eps, doc/File.eps,
 	  doc/Production_unfold.eps, doc/Nonterminal.eps,
 	  doc/Production.eps, doc/String.eps, doc/Term.eps, doc/Character.eps, doc/Atom_unfold.eps,
 	  doc/RAtom.eps, doc/RAtom_unfold.eps, doc/Export.eps,
 	  doc/RExtAtom.eps, doc/RFactor.eps, doc/Regexp.eps,
-	  doc/doc.tex, doc/doc.ps, src/afmpath.h, src/rgbpath.h,
+	  doc/doc.tex, doc/doc.ps, doc/doc.pdf, src/afmpath.h, src/rgbpath.h,
 	  CHANGES
 
 Executable ebnf2ps
@@ -57,3 +56,6 @@ Executable ebnf2ps
     PsOutput, 
     StringMatch,
     Version
+source-repository head
+  type: git
+  location: https://github.com/FranklinChen/Ebnf2ps

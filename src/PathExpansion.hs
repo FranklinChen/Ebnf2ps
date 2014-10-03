@@ -1,13 +1,12 @@
 {-# LANGUAGE CPP #-}
-module PathExpansion (expandPath) 
+module PathExpansion (expandPath)
 where
- 
+
 #ifdef __GLASGOW_HASKELL__
-import System.Directory
-import System.Environment
+import System.Environment (getEnv)
+import System.Directory (getDirectoryContents, doesDirectoryExist)
 import Control.Monad
-import System.IO
-import System.IO.Error
+import System.IO.Error (catchIOError, isDoesNotExistError)
 import System.Posix.User (getUserEntryForName, homeDirectory)
 #endif
 
@@ -83,7 +82,7 @@ replaceHome ((Brace t):xs)= do braceIn <- replaceHome t
 		               return(Brace(braceIn):(rest))
 replaceHome (x:xs) = do t <- replaceHome xs
 			return (x:t)
-	   
+
 
 -------- Ersetzen der Umgebungsvariablen --------------
 
@@ -100,9 +99,9 @@ replaceEnv (x:xs) = do t <- replaceEnv xs
 		       return (x:t)
 
 getEnv2 t
-	|t == "HOME" = catch (getEnv t) (\e -> if isDoesNotExistError e then return ['.'] else ioError e)
-	|otherwise = catch (getEnv t) (\e -> if isDoesNotExistError e then return [] else ioError e)
--------------------------------------------------------	
+	|t == "HOME" = catchIOError (getEnv t) (\e -> if isDoesNotExistError e then return ['.'] else ioError e)
+	|otherwise = catchIOError (getEnv t) (\e -> if isDoesNotExistError e then return [] else ioError e)
+-------------------------------------------------------
 
 ---------------- Teilen nach Doppelpunkt --------------
 isColon :: PathSpec -> Bool
@@ -120,18 +119,18 @@ replaceColon xs = let (l,s) = break (isColon) xs
 
 rpBrace :: [[PathSpec]] -> [[PathSpec]]
 rpBrace [] = []
-rpBrace (y:ys) = ((replaceBrace [] y) ++ (rpBrace ys)) 
+rpBrace (y:ys) = ((replaceBrace [] y) ++ (rpBrace ys))
 
 replaceBrace :: [PathSpec] -> [PathSpec] -> [[PathSpec]]
 replaceBrace dummy [] = [dummy]
-replaceBrace dummy (Brace t : xs) = [foldr (++) [] (dummy:([a]++[b]))| q <- replaceColon t,a<- replaceBrace [] q, b <- replaceBrace [] xs] 
+replaceBrace dummy (Brace t : xs) = [foldr (++) [] (dummy:([a]++[b]))| q <- replaceColon t,a<- replaceBrace [] q, b <- replaceBrace [] xs]
 replaceBrace dummy (x:xs) = replaceBrace (dummy ++ [x]) xs
 -------------------------------------------------------
 ------- Subdirectory ----------------------------------
 
 expandDirs :: [String] -> IO [String]
 expandDirs [] = return []
-expandDirs (path:paths) = 
+expandDirs (path:paths) =
 	do newpath <- expandOnePath [] path
 	   newpaths <- expandDirs paths
 	   return (newpath++newpaths)
@@ -139,13 +138,13 @@ expandDirs (path:paths) =
 expandOnePath :: String -> String -> IO [String]
 expandOnePath anfang [] = return [anfang]
 expandOnePath anfang (x:xs)
-	|x == '/' && nextSign xs '/' = 
+	|x == '/' && nextSign xs '/' =
 		do allDirs <- expandAllSubPaths [(anfang ++ [x])]
 		   const <- getConstraints (xs,[])
 		   --expandDirs (map (++(fst(getConstraints (xs,[])))) [sub|sub <- allDirs, elemSub(reverse(snd(getConstraints (xs,[])))) (reverse sub)])
 		   expandDirs (map (++ (fst const)) [sub|sub <- allDirs, elemSub(reverse(snd const)) (reverse sub)])
 	|otherwise = do expandOnePath (anfang ++ [x]) xs
-		   
+
 
 getConstraints :: (String,String) -> IO (String,String)
 getConstraints ([],ys) = return ([],ys)
@@ -171,7 +170,7 @@ expandAllSubPaths (x:xs) = do dirs <- searchForDirs (checkPath x)
 		              subdirs <- expandAllSubPaths (dirs++xs)
 		              return (x:subdirs)
 
-searchForDirs :: FilePath -> IO [FilePath]				
+searchForDirs :: FilePath -> IO [FilePath]
 searchForDirs dir = do all_dir <- getDirectoryContents dir
 		       dir_input <- filterM (specialPath) all_dir
 	               filterM (doesDirectoryExist) (map (dir ++) dir_input)
@@ -186,7 +185,7 @@ checkPath :: FilePath -> FilePath
 checkPath path
 	|last path == '/' = path
 	|otherwise = path++"/"
-				    
+
 ----------------------------------------------------------------------------------
 #else
 -- for Hugs 1.4
