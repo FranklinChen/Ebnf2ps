@@ -4,6 +4,7 @@ env:
   - GHCVER=7.4.2
   - GHCVER=7.6.3
   - GHCVER=7.8.3
+  - GHCVER=7.8.4
 
 before_install:
   # If $GHCVER is the one travis has, don't bother reinstalling it.
