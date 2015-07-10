@@ -34,4 +34,4 @@ Two environment variables may need to be set:
 
 With Peter Thiemann's permission, I am now maintaining this package, starting with version 1.0.12.
 
-I first used this software in 1995 (!), so it was a nostalgia trip finding it again in 2004 and reviving it. PostScript is no longer in fashion, but one can stil use this tool and then convert PostScript to PDF.
+I first used this software in 1995 (!), so it was a nostalgia trip finding it again in 2004 and reviving it. PostScript is no longer in fashion, but one can still use this tool and then convert PostScript to PDF.
