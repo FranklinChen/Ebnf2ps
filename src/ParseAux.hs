@@ -15,52 +15,52 @@ unlit :: String -> String
 unlit = unlines . map p . lines
     where p ('>':' ':cs)  = cs
           p ('>':'\t':cs) = cs
-          p _             = [] 
+          p _             = []
 
--- A preprocessor for yacc scripts 
+-- A preprocessor for yacc scripts
 
-yaccpreprocessor :: String -> String 
+yaccpreprocessor :: String -> String
 yaccpreprocessor "" = ""
 yaccpreprocessor ('%':'%':cs) = '%':'%': yaccRules cs
 yaccpreprocessor ('\n':cs)    = '\n':yaccpreprocessor cs
-yaccpreprocessor (_:cs)       = yaccpreprocessor cs   
- 
-yaccRules :: String -> String 
+yaccpreprocessor (_:cs)       = yaccpreprocessor cs
+
+yaccRules :: String -> String
 yaccRules "" = ""
 yaccRules ('/':'*':cs) = yaccRules (dropCComment 0 cs)
 yaccRules ('%':'{':cs) = yaccRules  (dropCSyntax cs)
-yaccRules ('%':'%':cs) = "%%" 
+yaccRules ('%':'%':cs) = "%%"
 yaccRules ('\'':'{':'\'':cs) = '\'':'{':'\'': yaccRules cs
 yaccRules ('{':cs)     = '{':yaccRules (dropActions 0 cs)
 yaccRules (c:cs)       = c:yaccRules cs
- 
+
 dropCSyntax :: String -> String
 dropCSyntax "" = ""
 dropCSyntax ('%':'}':cs) = cs
 dropCSyntax ('\n':cs) = '\n':dropCSyntax cs
 dropCSyntax (c:cs) = dropCSyntax cs
- 
+
 dropCComment :: Int -> String -> String
 dropCComment _ "" = ""
 dropCComment n ('/':'*':cs) = dropCComment (n+1) cs
 dropCComment n ('\n':cs) = '\n':dropCComment n cs
-dropCComment n ('*':'/':cs) 
+dropCComment n ('*':'/':cs)
              | n == 0 = cs
              | otherwise = dropCComment (n-1) cs
 dropCComment n (c:cs) = dropCComment n cs
 
- 
-dropActions :: Int -> String -> String 
+
+dropActions :: Int -> String -> String
 dropActions _ "" = ""
 dropActions n ('"':cs) = dropActions n css where (_,css) = lexString cs
 dropActions n ('\'':'{':'\'':cs) = dropActions n cs
 dropActions n ('\'':'}':'\'':cs) = dropActions n cs
 dropActions n ('{':cs) = dropActions (n+1) cs
 dropActions n ('\n':cs) = '\n':dropActions n cs
-dropActions n ('}':cs) 
+dropActions n ('}':cs)
             | n == 0 = '}':cs
             | otherwise = dropActions (n-1) cs
-dropActions n (c:cs) = dropActions n cs                 
+dropActions n (c:cs) = dropActions n cs
 
 
 -- A postprocessor for a grammar in EBNF and a postprocessor to make happy happy
@@ -70,37 +70,37 @@ data Token'
        | HappyInput
        | YaccInput
        | Newline
-       | Ident'  String 
+       | Ident'  String
        | CIdent' String
        | Symbol' String
        | String' String
        | Number' String
        | Percent
        | DoublePercent
-       | OpenBrace  
+       | OpenBrace
        | ClosingBrace
-       | Bar 
-       | SemiColon 
-       | DoubleColon 
+       | Bar
+       | SemiColon
+       | DoubleColon
        | Colon
-       | OpenBrack 
+       | OpenBrack
        | ClosingBrack
-       | OpenParen 
+       | OpenParen
        | ClosingParen
-       | Dot 
-       | Equal 
-       | Plus 
+       | Dot
+       | Equal
+       | Plus
        | Slash
   deriving Eq
 
 
-instance Show Token' where 
+instance Show Token' where
  showsPrec n (Ident' s) = showChar '[' . showString s . showString "] "
  showsPrec n (CIdent' s) = showChar '/' . showString s . showString "/"
  showsPrec n (Symbol' "\n") = showChar '\n'
  showsPrec n (Symbol' s) = showChar '<' . showString s . showString "> "
- showsPrec n (String' s) = showChar '"' . showString s . showString "\" "     
- showsPrec n (Number' s) = showChar ' ' . showString s . showChar ' ' 
+ showsPrec n (String' s) = showChar '"' . showString s . showString "\" "
+ showsPrec n (Number' s) = showChar ' ' . showString s . showChar ' '
  showsPrec n Percent = showString "%"
  showsPrec n DoublePercent = showString "%% "
  showsPrec n OpenBrace = showString "{ "
@@ -119,14 +119,15 @@ instance Show Token' where
  showsPrec n Slash = showString "/ "
  showsPrec n Newline = showString "\n"
  showsPrec n YaccInput = showString "\n>>YACC input format<<\n"
- showsPrec n EbnfInput  = showString "\n>>EBNF input format<<\n" 
- showsPrec n HappyInput = showString "\n>>HAPPY input format<<\n" 
+ showsPrec n EbnfInput  = showString "\n>>EBNF input format<<\n"
+ showsPrec n HappyInput = showString "\n>>HAPPY input format<<\n"
  showList [] = id
  showList (x:xs) = shows x . showList xs
 
 
 -- a ebnf postlexer
 
+ebnf_postlexer :: [Token] -> [Token']
 ebnf_postlexer = \s -> EbnfInput : foldr f [] s
   where f (Symbol "\n") = id --Newline
         f (Symbol "=")  = (Equal:)
@@ -148,6 +149,7 @@ ebnf_postlexer = \s -> EbnfInput : foldr f [] s
 
 -- a happy postlexer
 
+happy_postlexer :: [Token] -> [Token']
 happy_postlexer = \s -> HappyInput : foldr f [] s
   where f (Symbol "\n") = id --Newline
         f (Symbol "%%") = (DoublePercent:)
@@ -197,24 +199,24 @@ happyPrepare' ts (ProdRepeatWithAtom p1 p2) = ProdRepeatWithAtom (happyPrepare' 
 happyPrepare' ts (ProdPlus) = ProdPlus
 happyPrepare' ts (ProdSlash prod) = ProdSlash (happyPrepare' ts prod)
 happyPrepare' ts (ProdTerm prods) = ProdTerm (map (happyPrepare' ts) prods)
-happyPrepare' ts (ProdNonterminal s) 
+happyPrepare' ts (ProdNonterminal s)
      | s `elem` ts = ProdTerminal s
      | otherwise   = ProdNonterminal s
 
-                
+
 yaccPrepare happyresult =
   [noDup (getNt nt) | nt <- nub nonterminals]
   where (nonterminals, prods) = transform happyresult [] []
-        getNt str = [yaccPrepare' nonterminals p | p@(ProdProduction nt _ _) <- prods, str == nt] 
+        getNt str = [yaccPrepare' nonterminals p | p@(ProdProduction nt _ _) <- prods, str == nt]
         transform [] as bs = (as,bs)
         transform ((ProdProduction nt aliases (ProdTerm ps)):pss) as bs =
               transform pss' (nt:as) bs'
-              where (factors, pss') = span isProdFactor pss 
+              where (factors, pss') = span isProdFactor pss
                     bs' = bs ++ [ProdProduction nt aliases (ProdTerm ps')]
-                    ps' = ps ++ factors       
+                    ps' = ps ++ factors
         noDup [p] = p
-        noDup (ProdProduction nt aliases (ProdTerm ps):p':ps') = 
-              ProdProduction nt aliases 
+        noDup (ProdProduction nt aliases (ProdTerm ps):p':ps') =
+              ProdProduction nt aliases
                (ProdTerm (foldr (\ (ProdProduction _ _ (ProdTerm prods')) ps1 -> ps1++prods') ps (p':ps')))
         isProdFactor p = case p of { ProdFactor _ -> True;  _ -> False}
 
@@ -227,9 +229,6 @@ yaccPrepare' nts (ProdRepeat1 prod) = ProdRepeat1 (yaccPrepare' nts prod)
 yaccPrepare' nts (ProdRepeatWithAtom p1 p2) = ProdRepeatWithAtom (yaccPrepare' nts p1) (yaccPrepare' nts p2)
 yaccPrepare' nts (ProdPlus) = ProdPlus
 yaccPrepare' nts (ProdSlash prod) = ProdSlash (yaccPrepare' nts prod)
-yaccPrepare' nts (ProdTerminal s) 
+yaccPrepare' nts (ProdTerminal s)
     | s `elem` nts = ProdNonterminal s
     | otherwise = ProdTerminal s
-
-
-
