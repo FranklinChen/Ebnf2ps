@@ -1,5 +1,5 @@
 Name:                Ebnf2ps
-Version:             1.0.14
+Version:             1.0.15
 Synopsis:               Peter's Syntax Diagram Drawing Tool
 Homepage:            https://github.com/FranklinChen/Ebnf2ps
 Bug-reports:         https://github.com/FranklinChen/Ebnf2ps/issues
@@ -17,6 +17,15 @@ Description:            Ebnf2ps generates nice looking syntax diagrams in EPS
                         immediatedly included in TeX/LaTeX documents and in
                         texts created with other popular document preparation
                         systems.
+Tested-with:         GHC==7.4.2
+                   , GHC==7.6.2
+                   , GHC==7.6.3
+                   , GHC==7.8.1
+                   , GHC==7.8.2
+                   , GHC==7.8.3
+                   , GHC==7.8.4
+                   , GHC==7.10.1
+                   , GHC==7.10.2
 
 Extra-source-files: README.md,
           examples/ebnf.BNF examples/gofer.BNF examples/regular.BNF, examples/examples.ps,
